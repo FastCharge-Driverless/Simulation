@@ -1,0 +1,11 @@
+# ROS2 / Colcon build artifacts
+build/
+install/
+log/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+.vscode/

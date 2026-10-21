@@ -1,0 +1,12 @@
+[submodule "as_sim"]
+	path = as_sim
+	url = https://github.com/FastCharge-Driverless/as_sim.git
+	branch = feat/visualizer
+[submodule "common_interfaces"]
+	path = common_interfaces
+	url = https://github.com/ros2/common_interfaces.git
+	branch = humble
+[submodule "FSAE_Visualizer"]
+	path = FSAE_Visualizer
+	url = https://github.com/extranerd/FSAE_Visualizer.git
+	branch = main
