@@ -88,20 +88,35 @@ colcon build --symlink-install --packages-select as_sim
 
 ## 🏎️ Come Eseguire la Simulazione
 
-### Metodo A: Avvio Diretto con Visualizzatore Unity (Consigliato)
+Abbiamo preparato due script già pronti per gestire l'avvio nel modo più stabile e comodo:
 
-1. Apri **Unity Hub** e apri il progetto presente in `Simulation/FSAE_Visualizer` (usando **Unity 6**).
-2. Nella finestra *Project*, apri la scena:  
-   `Assets/Scenes/SampleScene.unity`.
+### Metodo Consigliato: Avvio con script da WSL + Unity
+
+Questo metodo è il più affidabile in quanto mantiene i log visibili in terminale ed evita blocchi di sistema.
+
+1. **Terminale 1 (WSL)**: avvia il bridge Unity
+   ```bash
+   cd ~/Desktop/Simulation   # o il tuo percorso verso Simulation
+   ./start_endpoint.sh
+   ```
+2. **Terminale 2 (WSL)**: avvia la simulazione (es. Livello 4 Skidpad)
+   ```bash
+   cd ~/Desktop/Simulation
+   ./launch_sim.sh 4 skidpad
+   ```
+3. **Unity**: apri la scena `SampleScene.unity` e premi **Play** ▶️.  
+   Unity si collegherà istantaneamente alla porta `10000` già aperta senza errori!
+
+---
+
+### Metodo Alternativo: Avvio Automatico Diretto da Unity
+
+Se preferisci che sia Unity ad avviare tutto in background:
+1. Apri `Simulation/FSAE_Visualizer` in **Unity 6**.
+2. Apri `Assets/Scenes/SampleScene.unity`.
 3. Premi **Play** ▶️.
-
-**Cosa succede automaticamente?**
-- Il componente `RosSessionLauncher` sulla scena:
-  - Rileva in automatico i percorsi di `as_workspace` e `Simulation` sulla macchina dell'utente senza bisogno di configurazioni.
-  - Avvia in WSL il bridge `ros_tcp_endpoint` sulla porta `10000`.
-  - Lancia il simulatore (`ros2 launch as_sim sim.launch.py level:=4 track:=skidpad`).
-  - Carica la mappa statica dei coni corrispondente al tracciato da `Assets/StreamingAssets/slam_maps/`.
-  - Quando fermi il Play in Unity, chiude tutti i processi ROS in WSL.
+4. `RosSessionLauncher` avvierà in background sia l'endpoint che la simulazione in WSL.  
+   *(Nota: l'avvio in background di WSL può richiedere circa 6-8 secondi. Se nei primissimi secondi vedi qualche avviso di tentata connessione, attendi che WSL finisca di caricare i moduli Python)*.
 
 ---
 
