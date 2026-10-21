@@ -20,57 +20,65 @@ cartella_progetti/ (es. Desktop/)
 ```
 
 1. **`Simulation`** (questo repository):
-   - **`as_sim/`**: Simulatore dinamico/cinematico del veicolo, generazione tracciati (Skidpad, Acceleration, Autocross), sensori simulati e giudice di gara.
+   - **`as_sim/`**: Simulatore dinamico/cinematico del veicolo, generazione tracciati (Skidpad, Acceleration, Autocross), sensori simulati e harness di valutazione metrica.
    - **`common_interfaces/`**: Interfacce e messaggi standard ROS 2 Humble.
    - **`FSAE_Visualizer/`**: Progetto Unity 3D per visualizzazione in tempo reale e telemetria.
 
 2. **`as_workspace`** ([FastCharge-Driverless/as_workspace](https://github.com/FastCharge-Driverless/as_workspace)):
-   - Contiene l'intero stack di guida autonoma: `as_slam`, `as_path_planning`, `as_high_level_control`, `as_execution_manager`, `as_msgs` e il nodo bridge **`ros_tcp_endpoint`** (necessario per collegare Unity a ROS 2).
+   - Contiene l'intero stack di guida autonoma sul branch **`dev`**: `as_slam`, `as_path_planning`, `as_high_level_control`, `as_execution_manager`, `as_msgs` e il nodo bridge **`ros_tcp_endpoint`** (necessario per collegare Unity a ROS 2).
 
 ---
 
-## ⚙️ Prerequisiti
+## ⚙️ Prerequisiti di Sistema
 
-- **OS / Ambiente ROS 2**: Ubuntu 22.04 LTS nativo oppure Windows 10/11 con **WSL2 (Ubuntu 22.04)**.
-- **ROS 2**: ROS 2 **Humble Hawksbill**.
-- **Python**: Python 3.10+ con dipendenze del simulatore (`colcon`, `pytest`, `packaging>=24`, `setuptools<80`).
-- **Unity**: Unity Editor (consigliata versione LTS 2022.3 o superiore) per `FSAE_Visualizer`.
+- **OS**: Windows 10/11 con **WSL2 (Ubuntu 22.04 LTS)** *oppure* Ubuntu 22.04 LTS nativo.
+- **ROS 2**: **Humble Hawksbill**.
+- **Unity**: **Unity 6 (versione raccomandata: `6000.6.5f1`)** installabile da Unity Hub.
+- **Git & Git LFS**: installati sia su Windows che in WSL.
+- **Python**: Python 3.10+ in WSL con:
+  ```bash
+  pip install "packaging>=24" "setuptools<80"
+  ```
+  *(richiesto per evitare conflitti con colcon-core)*.
 
 ---
 
-## 🚀 Installazione e Configurazione
+## 🚀 Guida Passo-Passo: Dalla Clonazione all'Esecuzione
 
-### 1. Clonare entrambi i repository (affiancati)
+### Passo 1: Clonare entrambi i repository (affiancati)
 
-Posizionati nella cartella desiderata (es. `Desktop` o `~/projects`) e clona entrambi i repository con i rispettivi sottomoduli:
+Posizionati nella cartella in cui tieni i tuoi progetti (es. `Desktop` o `~/projects`) ed esegui:
 
 ```bash
 # 1. Clona lo stack autonomo (as_workspace)
-git clone --recurse-submodules https://github.com/FastCharge-Driverless/as_workspace.git
+git clone --recurse-submodules -b dev https://github.com/FastCharge-Driverless/as_workspace.git
 
 # 2. Clona questo workspace di simulazione (Simulation)
 git clone --recurse-submodules https://github.com/FastCharge-Driverless/Simulation.git
 ```
 
-> [!TIP]
-> Se hai già clonato senza `--recurse-submodules`, puoi inizializzare i sottomoduli entrando nella cartella ed eseguendo:
+> [!IMPORTANT]
+> **Aggiunta del bridge Unity (`ros_tcp_endpoint`) in `as_workspace`**:  
+> Unity comunica con ROS 2 tramite il pacchetto `ros_tcp_endpoint`. Se non è già presente in `as_workspace/src`, clonalo manualmente:
 > ```bash
-> git submodule update --init --recursive
+> cd as_workspace/src
+> git clone https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
+> cd ../..
 > ```
 
 ---
 
-### 2. Compilazione in ROS 2 (WSL / Ubuntu)
+### Passo 2: Compilazione in ROS 2 (WSL / Ubuntu)
 
-Compila prima `as_workspace` e successivamente `Simulation`:
+Compila prima lo stack di controllo e successivamente il simulatore:
 
 ```bash
-# --- Compilazione as_workspace ---
+# --- 1. Compila as_workspace ---
 cd as_workspace
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 
-# --- Compilazione Simulation ---
+# --- 2. Compila Simulation ---
 cd ../Simulation
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-select as_sim
@@ -78,47 +86,63 @@ colcon build --symlink-install --packages-select as_sim
 
 ---
 
-## 🏎️ Esecuzione della Simulazione
+## 🏎️ Come Eseguire la Simulazione
 
-### Sourcing contemporaneo dei due workspace (Overlay)
+### Metodo A: Avvio Diretto con Visualizzatore Unity (Consigliato)
 
-Per eseguire missioni con lo stack (`level:=1` o superiore), è indispensabile effettuare il source di entrambi i workspace:
+1. Apri **Unity Hub** e apri il progetto presente in `Simulation/FSAE_Visualizer` (usando **Unity 6**).
+2. Nella finestra *Project*, apri la scena:  
+   `Assets/Scenes/SampleScene.unity`.
+3. Premi **Play** ▶️.
 
-```bash
-source /opt/ros/humble/setup.bash
-source <percorso>/as_workspace/install/setup.bash
-source <percorso>/Simulation/install/setup.bash
-```
-
-### Livelli di simulazione disponibili (`level:=0..6`)
-
-Il simulatore supporta diversi livelli di integrazione:
-- `level:=0`: Solo dinamica veicolo e sensori simulati.
-- `level:=1`: Veicolo + SLAM.
-- `level:=2`: Veicolo + SLAM + Path Planning.
-- `level:=3`: Stack open-loop completo.
-- `level:=4` *(Default)*: Closed-loop completo: il controller HLC guida la fisica del veicolo.
-- `level:=5`: Include simulazione CAN su interfaccia `vcan0`.
-- `level:=6`: Hardware-In-the-Loop (HIL) su bus CAN reale `can0`.
-
-Esempio di avvio simulatore headless / con RViz:
-```bash
-ros2 launch as_sim sim.launch.py level:=4 track:=skidpad rviz:=true eval:=true
-```
+**Cosa succede automaticamente?**
+- Il componente `RosSessionLauncher` sulla scena:
+  - Rileva in automatico i percorsi di `as_workspace` e `Simulation` sulla macchina dell'utente senza bisogno di configurazioni.
+  - Avvia in WSL il bridge `ros_tcp_endpoint` sulla porta `10000`.
+  - Lancia il simulatore (`ros2 launch as_sim sim.launch.py level:=4 track:=skidpad`).
+  - Carica la mappa statica dei coni corrispondente al tracciato da `Assets/StreamingAssets/slam_maps/`.
+  - Quando fermi il Play in Unity, chiude tutti i processi ROS in WSL.
 
 ---
 
-## 🎮 Visualizzatore 3D in Unity (`FSAE_Visualizer`)
+### Metodo B: Avvio Manuale da Terminale (con o senza RViz)
 
-1. Apri **Unity Hub** e aggiungi il progetto dalla cartella `Simulation/FSAE_Visualizer`.
-2. Apri la scena principale: `Assets/Scenes/SampleScene.unity`.
-3. Premi **Play** nell'editor di Unity.
+Se preferisci avviare la simulazione direttamente da terminale WSL:
 
-### 🔌 Come funziona l'integrazione automatica con WSL:
-Il componente `RosSessionLauncher` presente nella scena:
-- **Rileva automaticamente** i percorsi di `as_workspace` e `Simulation` (grazie al posizionamento affiancato delle cartelle), convertendoli nel formato WSL `/mnt/<disco>/...` senza richiedere alcuna modifica manuale tra sviluppatori diversi.
-- Avvia automaticamente all'interno di WSL sia il bridge `ros_tcp_endpoint` che il simulatore `as_sim`.
-- Chiude in modo pulito tutti i processi ROS al termine della sessione di Play.
+```bash
+# 1. Sourcing di entrambi i workspace (Overlay)
+source /opt/ros/humble/setup.bash
+source ~/Desktop/as_workspace/install/setup.bash
+source ~/Desktop/Simulation/install/setup.bash
 
-> [!NOTE]
-> Se `as_workspace` si trova in una directory personalizzata (es. `/home/username/...` all'interno del filesystem nativo di WSL), puoi inserire direttamente il percorso desiderato nel campo **As Workspace Path** del componente `RosSessionLauncher` nell'Inspector di Unity.
+# 2. Imposta l'isolamento della rete ROS
+export ROS_DOMAIN_ID=97
+export ROS_LOCALHOST_ONLY=1
+
+# 3. Avvia la simulazione (es. Livello 4 - Closed Loop autonomo su Skidpad con RViz)
+ros2 launch as_sim sim.launch.py level:=4 track:=skidpad rviz:=true eval:=true
+```
+
+#### Livelli di simulazione disponibili (`level:=0..6`):
+- `level:=0`: Solo fisica veicolo e sensori (auto-drive lineare).
+- `level:=1`: Veicolo + SLAM.
+- `level:=2`: Veicolo + SLAM + Path Planning.
+- `level:=3`: Stack open-loop completo.
+- `level:=4` *(Default)*: Closed-loop completo: il controller HLC guida sterzo, acceleratore e freno del veicolo sulla traiettoria pianificata.
+- `level:=5`: Include simulazione bus CAN su interfaccia `vcan0` (richiede `bash as_sim/scripts/setup_vcan.sh` una tantum).
+- `level:=6`: Hardware-In-the-Loop (HIL) su interfaccia `can0` fisica.
+
+---
+
+## 🔄 Gestione e Aggiornamento dei Submodule
+
+Per sincronizzare i sottomoduli con gli ultimi commit remoti:
+
+```bash
+git submodule update --init --recursive
+```
+
+Per aggiornare ciascun sottomodulo al branch più recente:
+```bash
+git submodule update --remote
+```
