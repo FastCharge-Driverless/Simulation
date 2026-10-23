@@ -151,12 +151,21 @@ riaprire terminali. `launch_sim.sh` resta invariato.
 ./demo_sim.sh autocross_default 4 --keep # stack acceso a fine corsa (topic, RViz)
 
 ./sim_ctl.sh restart                     # terminale 3: nuova corsa
+./sim_ctl.sh track skidpad               # cambia tracciato e riparte
 ./sim_ctl.sh stop | start | status
 ```
 
 Ctrl+C sul terminale di `demo_sim.sh` chiude anche tutti i nodi della corsa.
-In Unity scegli il CSV dei coni (`csvFileName` su ConeMapSubscriber) uguale al
-tracciato lanciato.
+Un nome di tracciato sbagliato dà errore con l'elenco dei nomi validi (anche con
+`launch_sim.sh` / `sim.launch.py`, che prima ripiegavano in silenzio su skidpad).
+
+Nel visualizzatore Unity, con `demo_sim.sh` attivo:
+- i coni seguono da soli il tracciato caricato dalla simulazione;
+- il pannello in alto a sinistra ha Nuova corsa, Stop, EMERGENZA (RES) e la scelta
+  del tracciato; **F1** mostra l'overlay di debug, **H** nasconde il pannello.
+
+Topic del run manager: `/sim/run/cmd` (`std_msgs/String`: `restart`, `stop`, `start`,
+`track NOME`) e `/sim/run/state` (JSON `{phase, track, error}`, ogni secondo).
 
 #### Livelli di simulazione disponibili (`level:=0..6`):
 - `level:=0`: Solo fisica veicolo e sensori (auto-drive lineare).
