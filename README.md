@@ -138,6 +138,26 @@ export ROS_LOCALHOST_ONLY=1
 ros2 launch as_sim sim.launch.py level:=4 track:=skidpad rviz:=true eval:=true
 ```
 
+### Metodo Demo: riavvio con un comando e stop automatico a fine corsa
+
+`demo_sim.sh` avvia la simulazione tramite un *run manager*: a fine corsa lo stack si
+ferma dopo 3 s (la CPU torna a riposo) e una nuova corsa parte con un comando, senza
+riaprire terminali. `launch_sim.sh` resta invariato.
+
+```bash
+./start_endpoint.sh                      # terminale 1 (solo se usi Unity), resta su tra le corse
+./demo_sim.sh                            # terminale 2: autocross_default, livello 4
+./demo_sim.sh skidpad 4 --loop           # riparte da sola a ogni fine corsa
+./demo_sim.sh autocross_default 4 --keep # stack acceso a fine corsa (topic, RViz)
+
+./sim_ctl.sh restart                     # terminale 3: nuova corsa
+./sim_ctl.sh stop | start | status
+```
+
+Ctrl+C sul terminale di `demo_sim.sh` chiude anche tutti i nodi della corsa.
+In Unity scegli il CSV dei coni (`csvFileName` su ConeMapSubscriber) uguale al
+tracciato lanciato.
+
 #### Livelli di simulazione disponibili (`level:=0..6`):
 - `level:=0`: Solo fisica veicolo e sensori (auto-drive lineare).
 - `level:=1`: Veicolo + SLAM.
