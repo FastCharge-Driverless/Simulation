@@ -4,6 +4,12 @@ Repository principale per l'ambiente di simulazione e visualizzazione del team *
 
 Questo workspace raccoglie il simulatore veicolo/tracciati ROS 2 (`as_sim`), le interfacce ROS 2 (`common_interfaces`) e il visualizzatore 3D in Unity (`FSAE_Visualizer`) gestiti come **Git Submodules**.
 
+> **Installazione, guide passo passo:**
+> - **[Linux nativo (Ubuntu 22.04)](docs/LINUX.md)**: ROS 2, stack e simulazione direttamente sul computer.
+> - **[Docker (Mac, Linux)](docs/DOCKER.md)**: tutto in un container, il visualizzatore sul computer.
+>
+> Il resto di questa pagina descrive il setup originale su Windows + WSL.
+
 ---
 
 ## 🏗️ Architettura: I due Workspace Complementari
