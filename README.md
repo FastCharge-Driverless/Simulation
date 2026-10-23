@@ -162,7 +162,10 @@ Un nome di tracciato sbagliato dà errore con l'elenco dei nomi validi (anche co
 Nel visualizzatore Unity, con `demo_sim.sh` attivo:
 - i coni seguono da soli il tracciato caricato dalla simulazione;
 - il pannello in alto a sinistra ha Nuova corsa, Stop, EMERGENZA (RES) e la scelta
-  del tracciato; **F1** mostra l'overlay di debug, **H** nasconde il pannello.
+  del tracciato; **F1** mostra l'overlay di debug, **H** nasconde il pannello;
+- i coni restano grigi finché lo SLAM non li ha mappati (contatore in alto a destra),
+  la linea verde è la traiettoria pianificata, l'HUD mostra velocità, conto alla
+  rovescia prima della partenza e tempo della corsa.
 
 Topic del run manager: `/sim/run/cmd` (`std_msgs/String`: `restart`, `stop`, `start`,
 `track NOME`) e `/sim/run/state` (JSON `{phase, track, error}`, ogni secondo).
