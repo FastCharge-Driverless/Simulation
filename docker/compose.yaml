@@ -1,0 +1,40 @@
+# Usato dagli script in questa cartella (setup.sh, demo.sh), che impostano WS_ROOT.
+# A mano: export WS_ROOT=<cartella con as_workspace e Simulation>, poi
+#   docker compose -f Simulation/docker/compose.yaml up -d --build
+name: fsc-ros
+services:
+  ros:
+    build:
+      context: ../..
+      dockerfile: Simulation/docker/Dockerfile
+    image: fsc-ros:humble
+    container_name: fsc-ros
+    command: sleep infinity
+    working_dir: ${WS_ROOT:?usa docker/setup.sh o esporta WS_ROOT}
+    environment:
+      WS_ROOT: ${WS_ROOT}
+      ROS_DOMAIN_ID: "97"
+      ROS_LOCALHOST_ONLY: "1"
+      # Il container gira come root: su un host Linux lascerebbe __pycache__
+      # di root nei sorgenti.
+      PYTHONDONTWRITEBYTECODE: "1"
+    ports:
+      - "10000:10000"   # ros_tcp_endpoint -> visualizzatore Unity sul computer
+      - "8765:8765"     # foxglove_bridge -> Foxglove sul computer
+    volumes:
+      # Stesso percorso dentro e fuori: symlink-install e ../as_workspace funzionano uguale.
+      - ${WS_ROOT}:${WS_ROOT}
+      # Artefatti di build in volumi Docker: più veloci e non sporcano le repo.
+      - asws_build:${WS_ROOT}/as_workspace/build
+      - asws_install:${WS_ROOT}/as_workspace/install
+      - asws_log:${WS_ROOT}/as_workspace/log
+      - sim_build:${WS_ROOT}/Simulation/build
+      - sim_install:${WS_ROOT}/Simulation/install
+      - sim_log:${WS_ROOT}/Simulation/log
+volumes:
+  asws_build:
+  asws_install:
+  asws_log:
+  sim_build:
+  sim_install:
+  sim_log:

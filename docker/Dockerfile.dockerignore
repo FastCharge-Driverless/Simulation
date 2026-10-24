@@ -1,0 +1,6 @@
+**
+!as_workspace/src/**/package.xml
+!as_workspace/src/**/COLCON_IGNORE
+!Simulation/as_sim/package.xml
+!Simulation/scripts/install_python_deps.sh
+as_workspace/src/as_sim/**

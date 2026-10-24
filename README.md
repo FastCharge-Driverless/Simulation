@@ -4,6 +4,12 @@ Repository principale per l'ambiente di simulazione e visualizzazione del team *
 
 Questo workspace raccoglie il simulatore veicolo/tracciati ROS 2 (`as_sim`), le interfacce ROS 2 (`common_interfaces`) e il visualizzatore 3D in Unity (`FSAE_Visualizer`) gestiti come **Git Submodules**.
 
+> **Installazione, guide passo passo:**
+> - **[Linux nativo (Ubuntu 22.04)](docs/LINUX.md)**: ROS 2, stack e simulazione direttamente sul computer.
+> - **[Docker (Mac, Linux)](docs/DOCKER.md)**: tutto in un container, il visualizzatore sul computer.
+>
+> Il resto di questa pagina descrive il setup originale su Windows + WSL.
+
 ---
 
 ## 🏗️ Architettura: I due Workspace Complementari
@@ -137,6 +143,38 @@ export ROS_LOCALHOST_ONLY=1
 # 3. Avvia la simulazione (es. Livello 4 - Closed Loop autonomo su Skidpad con RViz)
 ros2 launch as_sim sim.launch.py level:=4 track:=skidpad rviz:=true eval:=true
 ```
+
+### Metodo Demo: riavvio con un comando e stop automatico a fine corsa
+
+`demo_sim.sh` avvia la simulazione tramite un *run manager*: a fine corsa lo stack si
+ferma dopo 3 s (la CPU torna a riposo) e una nuova corsa parte con un comando, senza
+riaprire terminali. `launch_sim.sh` resta invariato.
+
+```bash
+./start_endpoint.sh                      # terminale 1 (solo se usi Unity), resta su tra le corse
+./demo_sim.sh                            # terminale 2: autocross_default, livello 4
+./demo_sim.sh skidpad 4 --loop           # riparte da sola a ogni fine corsa
+./demo_sim.sh autocross_default 4 --keep # stack acceso a fine corsa (topic, RViz)
+
+./sim_ctl.sh restart                     # terminale 3: nuova corsa
+./sim_ctl.sh track skidpad               # cambia tracciato e riparte
+./sim_ctl.sh stop | start | status
+```
+
+Ctrl+C sul terminale di `demo_sim.sh` chiude anche tutti i nodi della corsa.
+Un nome di tracciato sbagliato dà errore con l'elenco dei nomi validi (anche con
+`launch_sim.sh` / `sim.launch.py`, che prima ripiegavano in silenzio su skidpad).
+
+Nel visualizzatore Unity, con `demo_sim.sh` attivo:
+- i coni seguono da soli il tracciato caricato dalla simulazione;
+- il pannello in alto a sinistra ha Nuova corsa, Stop, EMERGENZA (RES) e la scelta
+  del tracciato; **F1** mostra l'overlay di debug, **H** nasconde il pannello;
+- i coni restano grigi finché lo SLAM non li ha mappati (contatore in alto a destra),
+  la linea verde è la traiettoria pianificata, l'HUD mostra velocità, conto alla
+  rovescia prima della partenza e tempo della corsa.
+
+Topic del run manager: `/sim/run/cmd` (`std_msgs/String`: `restart`, `stop`, `start`,
+`track NOME`) e `/sim/run/state` (JSON `{phase, track, error}`, ogni secondo).
 
 #### Livelli di simulazione disponibili (`level:=0..6`):
 - `level:=0`: Solo fisica veicolo e sensori (auto-drive lineare).
